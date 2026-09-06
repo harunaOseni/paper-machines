@@ -14,6 +14,8 @@ export function canvasPoint(clientX, clientY, rect, clamp = false) {
 
 export class SketchModel {
   constructor() {
+    this.sketchId = "sketch-" + crypto.randomUUID();
+    this.revision = 0;
     this.state = { sample: false, strokes: [] };
     this.past = [];
     this.future = [];
@@ -27,6 +29,7 @@ export class SketchModel {
     this.past.push(this.state);
     if (this.past.length > HISTORY_LIMIT) this.past.shift();
     this.state = next;
+    this.revision++;
     this.future = [];
   }
   begin(pointerId, point, { color, eraser }) {
@@ -55,12 +58,14 @@ export class SketchModel {
     if (!this.canUndo) return false;
     this.future.push(this.state);
     this.state = this.past.pop();
+    this.revision++;
     return true;
   }
   redo() {
     if (!this.canRedo) return false;
     this.past.push(this.state);
     this.state = this.future.pop();
+    this.revision++;
     return true;
   }
   clear() {

@@ -1,4 +1,6 @@
 import { SketchModel, canvasPoint, SKETCH_SIZE } from './sketch-model.js';
+import { renderSketch } from './sketch-renderer.js';
+import { prepareSketch } from './sketch-snapshot.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('sketch');
@@ -7,42 +9,21 @@ const model = new SketchModel();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let ink = '#e56b39', erasing = false, busy = false, timer, ratio = 1;
 let frame = 0;
-
-function renderSample() {
-ctx.save();ctx.translate(220,205);ctx.scale(1.05,1.05);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#d87847';ctx.lineWidth=4;ctx.fillStyle='#edaa7440';ctx.beginPath();ctx.moveTo(42,135);ctx.bezierCurveTo(12,95,20,36,43,55);ctx.lineTo(77,100);ctx.bezierCurveTo(125,60,185,73,228,100);ctx.bezierCurveTo(255,30,280,56,263,125);ctx.bezierCurveTo(332,180,318,290,263,316);ctx.bezierCurveTo(188,355,58,345,26,295);ctx.bezierCurveTo(-8,247,1,171,42,135);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(64,332,36,15,-.2,0,Math.PI*2);ctx.ellipse(244,334,36,14,.1,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#7b6047';ctx.lineWidth=5;for(const x of [111,205]){ctx.beginPath();ctx.ellipse(x,210,6,11,0,0,Math.PI*2);ctx.stroke();}ctx.beginPath();ctx.arc(159,235,15,0,Math.PI);ctx.stroke();ctx.strokeStyle='#d8784770';ctx.lineWidth=2;for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(48+i*7,164);ctx.lineTo(37+i*7,188);ctx.stroke();}ctx.restore();
+let preparedSketch = null;
+export function getPreparedSketch() {
+  return preparedSketch?.revision === model.revision ? preparedSketch : null;
 }
 
-function paintStroke(stroke) {
-  ctx.save();
-  ctx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
-  ctx.strokeStyle = stroke.color;
-  ctx.fillStyle = stroke.color;
-  ctx.lineWidth = stroke.width;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  const [first, ...rest] = stroke.points;
-  ctx.beginPath();
-  if (!rest.length) {
-    ctx.arc(first.x, first.y, stroke.width / 2, 0, Math.PI * 2);
-    ctx.fill();
-  } else {
-    ctx.moveTo(first.x, first.y);
-    for (const point of rest) ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
 
 function render() {
   frame = 0;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.clearRect(0, 0, SKETCH_SIZE, SKETCH_SIZE);
-  if (model.state.sample) renderSample();
-  for (const stroke of model.state.strokes) paintStroke(stroke);
-  if (model.active) paintStroke(model.active);
+  renderSketch(ctx, model.state, model.active);
 }
 function scheduleRender() { if (!frame) frame = requestAnimationFrame(render); }
 function sync() {
+  if (preparedSketch?.revision !== model.revision) preparedSketch = null;
   const sample = model.state.sample && !model.state.strokes.length && !model.active;
   $('undo').disabled = busy || !model.canUndo;
   $('redo').disabled = busy || !model.canRedo;
@@ -158,10 +139,21 @@ $('sample').onclick = () => {
   model.loadSample(); $('notice').textContent = '';
   sync(); scheduleRender();
 };
-$('bring').onclick = () => {
+$('bring').onclick = async () => {
   if (busy || model.active || !model.hasContent) return;
   if (!model.state.sample || model.state.strokes.length) {
-    $('notice').textContent = 'Your sketch is ready. Generation is not connected yet.'; return;
+    busy = true; preparedSketch = null; sync();
+    $('bring').textContent = 'Preparing your sketch…';
+    $('notice').textContent = '';
+    try {
+      preparedSketch = await prepareSketch({ state: model.state, sketchId: model.sketchId, revision: model.revision });
+      $('notice').textContent = 'Sketch prepared. Generation is not connected yet.';
+    } catch (error) {
+      $('notice').textContent = error.message || 'Could not prepare your sketch. Please try again.';
+    } finally {
+      busy = false; sync();
+    }
+    return;
   }
   busy = true; sync(); $('progress').hidden = false;
   $('progress-title').textContent = 'Finding a little personality…';
