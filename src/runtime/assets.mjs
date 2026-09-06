@@ -32,6 +32,7 @@ export async function buildRuntimeAssets() {
               finally{bitmap.close();}
             }
             parent.postMessage(event,parentOrigin);
+            if(event.type==='disposed'||event.type==='error')worker.terminate();
           };
           worker.onerror=e=>parent.postMessage({protocolVersion:'1.0.0',...ids,sequence:1000000000,type:'error',diagnostic:'Runtime startup failed: '+String(e.message||'Worker unavailable').slice(0,300)},parentOrigin);
           worker.postMessage(m);return;

@@ -38,6 +38,14 @@ function draw() {
   if(currentCopy){scene.remove(currentCopy.root);currentCopy.dispose();}
   currentCopy=next;scene.add(next.root);renderer.render(scene,camera);
 }
+function release() {
+  // Trusted resources must be released even when guest cleanup throws.
+  try {currentCopy?.dispose();}
+  finally {
+    try {renderer?.dispose();}
+    finally {renderer?.forceContextLoss();currentCopy=undefined;instance=undefined;scene=undefined;camera=undefined;renderer=undefined;}
+  }
+}
 self.onmessage=event=>{
   try {
     const message=event.data;
@@ -65,12 +73,18 @@ self.onmessage=event=>{
     if(stopped || !acceptsCommand(message,config,lastCommand))return;
     lastCommand=message.sequence;
     if(message.type==='dispose') {
-      stopped=true;sync(instance.dispose());currentCopy?.dispose();renderer?.dispose();emit('disposed','Object disposed');self.close();return;
+      stopped=true;
+      try {sync(instance.dispose());}finally{release();}
+      emit('disposed','Object disposed');self.close();return;
     }
     tick++;
     const duration=Math.max(1,Math.round(config.animation.durationSeconds*30));
     const sample=config.animation.loop?tick%duration:Math.min(tick,duration);
     sync(instance.update(harden({elapsedSeconds:sample/30,deltaSeconds:1/30,tick:sample})));
     draw();emit('frame','Frame rendered');
-  }catch(error) {stopped=true;if(config)emit('error','Object stopped: '+String(error?.message??'Runtime failure').slice(0,300));self.close();}
+  }catch(error) {
+    stopped=true;
+    try {release();}catch{/* Context termination is the final cleanup fallback. */}
+    if(config)emit('error','Object stopped: '+String(error?.message??'Runtime failure').slice(0,300));self.close();
+  }
 };

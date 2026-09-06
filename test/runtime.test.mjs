@@ -4,6 +4,44 @@ import * as THREE from 'three';
 import { acceptsRuntimeEvent, acceptsCommand } from '../src/runtime/protocol.js';
 import { copyRenderable } from '../src/runtime/geometry-copy.js';
 import {hasOpenBoundary} from '../src/runtime/surface-policy.js';
+import {RUNTIME_LIMITS} from '../src/runtime/limits.js';
+
+test('copy disposal releases each trusted resource exactly once',()=>{
+  const original=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());
+  const result=copyRenderable(original);let released=0;
+  result.root.geometry.addEventListener('dispose',()=>released++);
+  result.root.material.addEventListener('dispose',()=>released++);
+  result.dispose();result.dispose();assert.equal(released,2);
+  original.geometry.dispose();original.material.dispose();
+});
+
+test('index and draw-call budgets apply across the whole object',()=>{
+  const root=new THREE.Group(),geometry=new THREE.BufferGeometry(),material=new THREE.MeshBasicMaterial();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,1,0,0,0,1,0],3));
+  geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(300003),1));
+  root.add(new THREE.Mesh(geometry,material),new THREE.Mesh(geometry,material));
+  assert.throws(()=>copyRenderable(root),/Index budget/);
+  geometry.setIndex([0,1,2]);
+  for(let i=0;i<65;i++)geometry.addGroup(0,3,0);
+  for(const child of root.children)child.material=[material];
+  assert.throws(()=>copyRenderable(root),/Draw call budget/);
+  geometry.dispose();material.dispose();
+});
+
+test('material and attribute-byte budgets are aggregate limits',()=>{
+  const root=new THREE.Group(),geometry=new THREE.BoxGeometry(),material=new THREE.MeshBasicMaterial();
+  for(let i=0;i<17;i++)root.add(new THREE.Mesh(geometry,Array(8).fill(material)));
+  assert.throws(()=>copyRenderable(root),/Material budget/);
+  geometry.dispose();material.dispose();
+  const large=new THREE.BufferGeometry();
+  large.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,1,0,0,0,1,0],3));
+  for(const [key,size] of [['normal',3],['uv',2],['color',3]])large.setAttribute(key,new THREE.BufferAttribute(new Float32Array(100000*size),size));
+  const group=new THREE.Group(),m=new THREE.MeshBasicMaterial();
+  for(let i=0;i<3;i++)group.add(new THREE.Mesh(large,m));
+  assert.throws(()=>copyRenderable(group),/byte budget/);
+  large.dispose();m.dispose();
+  assert.ok(RUNTIME_LIMITS.cleanupMs<RUNTIME_LIMITS.frameMs);
+});
 
 test('open sheets render both faces without changing closed volumes or explicit material intent',()=>{
   const closed=new THREE.BoxGeometry(),sphere=new THREE.SphereGeometry(1,12,8),plane=new THREE.PlaneGeometry();

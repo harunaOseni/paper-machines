@@ -64,8 +64,41 @@ try {
   assert.equal(await page.evaluate(()=>window.testRuntime.active!==null),true);console.log('PASS known-ID wrong-sender message rejected');
   const hung=await run('while(true){}');assert.equal(hung.type,'error');assert.match(hung.message,/stopped responding/);
   assert.equal(await page.locator('#test-runtime iframe').count(),0);console.log('PASS runaway worker stopped; parent stays responsive');
-  assert.equal((await run()).type,'ready');await page.evaluate(()=>window.testRuntime.dispose());
+  assert.equal((await run()).type,'ready');
+  assert.equal(await page.evaluate(()=>window.testRuntime.dispose()),'disposed');
   assert.equal(await page.locator('#test-runtime iframe').count(),0);console.log('PASS runtime recovers after failure and disposes');
+  const lifecycle=update=>`const root=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());return {root,update(t){${update}},dispose(){root.geometry.dispose();root.material.dispose();}};`;
+  assert.equal((await run(lifecycle('if(t.tick>0)while(true){}'))).type,'ready');
+  await page.waitForFunction(()=>window.runtimeEvents.some(e=>e.type==='error'),{},{timeout:4000});
+  assert.equal(await page.locator('#test-runtime iframe').count(),0);
+  console.log('PASS runaway update stopped by frame deadline');
+  for(const cleanup of ['throw new Error("cleanup failure")','while(true){}']){
+    assert.equal((await run(`const root=new THREE.Group();return {root,update(){},dispose(){${cleanup}}};`)).type,'ready');
+    assert.equal(await page.evaluate(()=>{
+      const frame=window.testRuntime.active.frame;
+      const result=window.testRuntime.dispose();
+      if(getComputedStyle(frame).display!=='none')throw new Error('Retiring frame must be invisible immediately');
+      return result;
+    }),'terminated');
+    assert.equal(await page.locator('#test-runtime iframe').count(),0);
+    assert.equal(await page.evaluate(()=>window.testRuntime.retiring),null);
+  }
+  console.log('PASS throwing and hung dispose hooks are terminated within cleanup deadline');
+  await page.evaluate(d=>{for(let i=0;i<20;i++)window.testRuntime.start(d);},createExampleObject());
+  assert.ok(await page.locator('#test-runtime iframe').count()<=2);
+  await page.waitForFunction(()=>window.testRuntime.retiring===null,{},{timeout:2000});
+  await page.evaluate(()=>window.testRuntime.dispose());
+  assert.equal(await page.locator('#test-runtime iframe').count(),0);
+  assert.equal((await run()).type,'ready');await visiblePixels();
+  await page.evaluate(()=>window.testRuntime.pause(true));
+  await page.waitForTimeout(150);
+  const pausedSequence=await page.evaluate(()=>window.testRuntime.active.lastSequence);
+  await page.waitForTimeout(1200);
+  assert.equal(await page.evaluate(()=>window.testRuntime.active.lastSequence),pausedSequence);
+  await page.evaluate(()=>window.testRuntime.pause(false));
+  await page.waitForFunction(s=>window.testRuntime.active.lastSequence>s,pausedSequence);
+  await page.evaluate(()=>window.testRuntime.dispose());
+  console.log('PASS rapid replacement stays bounded; pause stays idle and resume works');
   if(process.env.RUNTIME_EVAL_DIR) {
     const directory=process.env.RUNTIME_EVAL_DIR;
     for(const name of (await readdir(directory)).filter(n=>n.endsWith('.json')&&n!=='report.json')) {
