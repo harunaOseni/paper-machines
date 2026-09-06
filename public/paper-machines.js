@@ -85,7 +85,7 @@ function sync() {
   document.querySelector('.shadow').hidden = !sample;
   $('stage-caption').hidden = !sample;
   $('bring').textContent = generatingId ? 'Creating your object…' : preparing ? 'Preparing your sketch…' : sample ? 'Replay the transformation ↗' : generatedObject ? 'Try another interpretation ↗' : preview ? 'Bring to life ↗' : 'Preview my sketch ↗';
-  $('stage-status').textContent = preview ? 'Your sketch / revision ' + session.snapshot.revision : sample ? 'Little daydream / authored sample' : 'Your sketch / ready when you are';
+  $('stage-status').textContent = preview ? 'Your sketch' : sample ? 'Little daydream / authored sample' : 'Your sketch / ready when you are';
   for (const id of ['play', 'restart']) $(id).disabled = (!sample && !runtimeReady) || busy;
   $('zoom').disabled = !sample || busy;
   if (runtimeReady) {
