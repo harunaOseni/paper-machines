@@ -3,8 +3,11 @@ import { renderSketch } from './sketch-renderer.js';
 import { prepareSketch } from './sketch-snapshot.js';
 import { SketchSession } from './sketch-session.js';
 import { requestGeneration } from './generation-client.js';
+import { GenerationProgress } from './generation-progress.js';
+import { ObjectRuntime } from '/runtime/host.js';
 
 const $ = id => document.getElementById(id);
+const generationProgress = new GenerationProgress($('generation-progress'));
 const canvas = $('sketch');
 const ctx = canvas.getContext('2d');
 const model = new SketchModel();
@@ -14,10 +17,35 @@ let frame = 0;
 const session = new SketchSession();
 let preparing = false, previewUrl = null;
 let generatingId = null, generatedObject = null;
+let runtimeReady = false, runtimePaused = reducedMotion;
+const runtime = new ObjectRuntime($('runtime-view'), (status, message) => {
+  runtimeReady = status === 'ready';
+  $('runtime-view').hidden = !runtimeReady;
+  $('runtime-view').dataset.state = status;
+  if (runtimeReady) runtime.pause(runtimePaused);
+  if (runtimeReady) generationProgress.complete();
+  else if(status==='error') generationProgress.fail(message);
+  $('notice').textContent = message;
+  sync();
+});
+function startRuntime() {
+  runtimeReady = false; $('runtime-view').hidden = true;
+  if(!generationProgress.stage) generationProgress.start();
+  generationProgress.set('opening');
+  $('runtime-view').dataset.state = 'loading';
+  try { runtime.start(generatedObject); }
+  catch (error) {
+    $('runtime-view').hidden = true; $('runtime-view').dataset.state = 'error';
+    $('notice').textContent = error.message || 'This object could not start.';
+    generationProgress.fail($('notice').textContent);
+  }
+}
 export function getGeneratedObject() { return generatedObject; }
 export function getPreparedSketch() { return session.snapshot; }
 export function getGenerationRequest() { return session.request?.envelope ?? null; }
 function discardPreview() {
+  generationProgress.reset();
+  runtime.dispose(); runtimeReady = false; $('runtime-view').hidden = true;
   session.invalidate(); preparing = false;
   generatingId = generatedObject = null;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -36,9 +64,12 @@ function scheduleRender() { if (!frame) frame = requestAnimationFrame(render); }
 function sync() {
   if (session.capture && !session.isCurrent(session.capture, model.sketchId, model.revision)) discardPreview();
   const preview = !!session.snapshot;
-  $('snapshot-preview').hidden = !preview && !preparing;
+  $('snapshot-preview').hidden = runtimeReady || (!preview && !preparing);
+  document.querySelector('.stage-controls').hidden = !runtimeReady && (preview || preparing);
+  $('runtime-back').hidden = !runtimeReady;
   $('snapshot-image').hidden = !preview;
-  $('snapshot-title').textContent = preparing ? 'Preparing your sketch…' : generatingId ? 'Finding its next dimension…' : generatedObject ? 'Your object is generated.' : 'Your sketch, captured.';
+  $('snapshot-preview').classList.toggle('is-generating', !generationProgress.container.hidden);
+  $('snapshot-title').textContent = preparing ? 'Preparing your sketch…' : !generationProgress.container.hidden ? 'From sketch to life' : generatedObject ? 'Your object is generated.' : 'Your sketch, captured.';
   $('edit-sketch').textContent = generatingId ? 'Cancel generation' : preparing ? 'Cancel preparation' : 'Back to drawing';
   $('sketch').setAttribute('aria-busy', String(preparing));
   const sample = model.state.sample && !model.state.strokes.length && !model.active;
@@ -55,7 +86,14 @@ function sync() {
   $('stage-caption').hidden = !sample;
   $('bring').textContent = generatingId ? 'Creating your object…' : preparing ? 'Preparing your sketch…' : sample ? 'Replay the transformation ↗' : generatedObject ? 'Try another interpretation ↗' : preview ? 'Bring to life ↗' : 'Preview my sketch ↗';
   $('stage-status').textContent = preview ? 'Your sketch / revision ' + session.snapshot.revision : sample ? 'Little daydream / authored sample' : 'Your sketch / ready when you are';
-  for (const id of ['play', 'restart', 'zoom']) $(id).disabled = !sample || busy;
+  for (const id of ['play', 'restart']) $(id).disabled = (!sample && !runtimeReady) || busy;
+  $('zoom').disabled = !sample || busy;
+  if (runtimeReady) {
+    $('play').textContent = runtimePaused ? '▶' : 'Ⅱ';
+    $('play').setAttribute('aria-label', runtimePaused ? 'Play animation' : 'Pause animation');
+    $('restart').setAttribute('aria-label', 'Restart animation');
+    $('stage-status').textContent = generatedObject.subject.summary;
+  }
 }
 function resize() {
   const next = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
@@ -164,15 +202,22 @@ $('bring').onclick = async () => {
   if (!model.state.sample || model.state.strokes.length) {
     if (session.snapshot) {
       const request = session.startRequest();
-      generatingId = request.requestId; generatedObject = null; sync();
+      runtime.dispose(); runtimeReady = false; $('runtime-view').hidden = true;
+      generatingId = request.requestId; generatedObject = null; generationProgress.start(); sync();
       $('notice').textContent = 'Giving your sketch shape and movement…';
       try {
-        const result = await requestGeneration(request);
+        const result = await requestGeneration(request, fetch, stage => {
+          if(!request.signal.aborted && generatingId===request.requestId) generationProgress.set(stage);
+        });
         if (!session.accepts(result.definition)) return;
         generatedObject = result.definition;
-        $('notice').textContent = result.definition.subject.summary + ' — Object and animation generated. 3D playback is the next milestone.';
+        $('notice').textContent = 'Object and animation generated. Opening your creation…';
+        startRuntime();
       } catch (error) {
-        if (!request.signal.aborted && generatingId === request.requestId) $('notice').textContent = error.message || 'Generation failed. Please try again.';
+        if (!request.signal.aborted && generatingId === request.requestId) {
+          $('notice').textContent = error.message || 'Generation failed. Please try again.';
+          generationProgress.fail($('notice').textContent);
+        }
       } finally {
         if (generatingId === request.requestId) generatingId = null;
         sync();
@@ -216,12 +261,15 @@ $('edit-sketch').onclick = () => {
   canvas.focus({ preventScroll: true });
 };
 window.addEventListener('pagehide', discardPreview);
+$('runtime-back').onclick = $('edit-sketch').onclick;
 $('play').onclick = () => {
+  if (runtimeReady) { runtimePaused = !runtimePaused; runtime.pause(runtimePaused); sync(); return; }
   const paused = $('stage').classList.toggle('paused');
   $('play').textContent = paused ? '▶' : 'Ⅱ';
   $('play').setAttribute('aria-label', paused ? 'Play demo animation' : 'Pause demo animation');
 };
 $('restart').onclick = () => {
+  if (generatedObject) { startRuntime(); sync(); return; }
   const el = $('specimen'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
   $('stage').classList.remove('paused'); $('play').textContent = 'Ⅱ';
   $('play').setAttribute('aria-label', 'Pause demo animation');

@@ -137,13 +137,15 @@ export async function readBounded(stream, limit, signal) {
   }
 }
 
-export async function generateObject(input, { apiKey, model = 'gpt-6-astra', signal, fetchImpl = fetch, timeoutMs = GENERATION_LIMITS.timeoutMs } = {}) {
+export async function generateObject(input, { apiKey, model = 'gpt-6-astra', signal, fetchImpl = fetch, timeoutMs = GENERATION_LIMITS.timeoutMs, onProgress = () => {} } = {}) {
   if (!apiKey) fail(503, 'not_configured', 'Generation is not configured on the server.');
+  onProgress("validating");
   const verified = validateGenerationInput(input);
   const started = performance.now();
   const deadline = AbortSignal.timeout(timeoutMs);
   const combined = signal ? AbortSignal.any([signal, deadline]) : deadline;
   try {
+    onProgress('generating');
     const response = await fetchImpl('https://api.openai.com/v1/responses', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` }, signal: combined,
       body: JSON.stringify({ model, store: false, reasoning: { effort: 'medium' }, max_output_tokens: GENERATION_LIMITS.outputTokens,
@@ -162,7 +164,9 @@ export async function generateObject(input, { apiKey, model = 'gpt-6-astra', sig
       if ([401,403,404].includes(response.status)) fail(503, 'provider_access', 'The server API key or model access needs attention.');
       fail(502, 'provider_error', 'The AI service could not generate this sketch. Try again.');
     }
-    const data = JSON.parse(await readBounded(response.body, GENERATION_LIMITS.responseBytes, combined));
+    const raw = await readBounded(response.body, GENERATION_LIMITS.responseBytes, combined);
+    onProgress('checking');
+    const data = JSON.parse(raw);
     const content = (data.output ?? []).flatMap(item => item.content ?? []);
     if (content.some(item => item.type === 'refusal')) fail(422, 'refused', 'The AI service could not help with this sketch. Try a different drawing.');
     if (data.status !== 'completed') fail(502, 'incomplete', 'Generation stopped before it finished. Try again.');
@@ -185,7 +189,9 @@ export function createGenerationHandler(options = {}) {
   let active = 0, started = Date.now(), count = 0;
   const inFlight = new Set();
   return async (request, response) => {
-    const send = (status, body) => { if (!response.destroyed) { response.writeHead(status, { 'content-type':'application/json', 'cache-control':'no-store' }); response.end(JSON.stringify(body)); } };
+    let streaming = false;
+    const event = body => { if (!response.destroyed) response.write(JSON.stringify(body)+'\n'); };
+    const send = (status, body) => { if (streaming) { event({type:status===200?'result':'error',...body}); response.end(); return; } if (!response.destroyed) { response.writeHead(status, { 'content-type':'application/json', 'cache-control':'no-store' }); response.end(JSON.stringify(body)); } };
     const host = request.headers.host;
     const port = request.socket.localPort;
     if (![ `localhost:${port}`, `127.0.0.1:${port}` ].includes(host) || request.headers.origin !== `http://${host}` || request.headers['x-paper-machines'] !== '1' || request.headers['content-type'] !== 'application/json') return send(403, { error:'Open Paper Machines on localhost to generate.', code:'forbidden' });
@@ -206,7 +212,12 @@ export function createGenerationHandler(options = {}) {
       if (!input || !validId(input.requestId)) fail(400,'invalid_input','The sketch request is invalid.');
       if (inFlight.has(input.requestId)) fail(409,'duplicate_request','This sketch request is already running.');
       id = input.requestId; inFlight.add(id);
-      const result = await generateObject(input, { ...options, signal: controller.signal });
+      if (request.headers.accept === 'application/x-ndjson') {
+        streaming=true;
+        response.writeHead(200, {'content-type':'application/x-ndjson','cache-control':'no-store','x-accel-buffering':'no'});
+        response.flushHeaders();
+      }
+      const result = await generateObject(input, { ...options, signal: controller.signal, onProgress: stage => { if(streaming) event({type:'progress',requestId:id,stage}); } });
       send(200, result);
     } catch (error) { send(error.status || 500, { error:error instanceof GenerationError ? error.message : 'Generation failed.', code:error.code || 'generation_failed' }); }
     finally { clearTimeout(timer); response.off('close', disconnect); if (id) inFlight.delete(id); active--; }

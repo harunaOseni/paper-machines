@@ -3,6 +3,9 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createGenerationHandler } from './src/paper-machines/generation-service.mjs';
+import { buildRuntimeAssets } from './src/runtime/assets.mjs';
+
+const runtimeAssets = await buildRuntimeAssets();
 
 try { process.loadEnvFile(fileURLToPath(new URL('./.env', import.meta.url))); }
 catch (error) { if (error.code !== 'ENOENT') throw new Error('Could not load local environment configuration.'); }
@@ -54,6 +57,15 @@ async function serveStatic(pathname, response) {
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
+    if (request.method === 'GET' && url.pathname === '/runtime/host.js') {
+      response.writeHead(200, { 'content-type':'text/javascript; charset=utf-8', 'cache-control':'no-cache' });
+      response.end(runtimeAssets.host);return;
+    }
+    if (request.method === 'GET' && url.pathname === '/runtime/frame') {
+      const frame=runtimeAssets.frame();
+      response.writeHead(200, { 'content-type':'text/html; charset=utf-8', 'cache-control':'no-store', 'content-security-policy':frame.csp, 'referrer-policy':'no-referrer' });
+      response.end(frame.html);return;
+    }
     if (request.method === 'POST' && url.pathname === '/api/generate') {
       await generate(request, response);
       return;
