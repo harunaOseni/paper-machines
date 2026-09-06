@@ -3,7 +3,7 @@ import { acceptsRuntimeEvent } from './protocol.js';
 import { RUNTIME_LIMITS } from './limits.js';
 
 export class ObjectRuntime {
-  constructor(container,onStatus=()=>{}) {this.container=container;this.onStatus=onStatus;this.active=null;this.retiring=null;}
+  constructor(container,onStatus=()=>{}, {frameUrl='/runtime/frame'}={}) {this.container=container;this.onStatus=onStatus;this.active=null;this.retiring=null;this.frameUrl=frameUrl;}
   start(definition) {
     if(!validateObjectPackage(definition).valid)throw new Error('Invalid object package');
     if(!globalThis.Worker || !globalThis.OffscreenCanvas || !OffscreenCanvas.prototype.transferToImageBitmap)throw new Error('This browser does not support isolated 3D playback.');
@@ -31,7 +31,7 @@ export class ObjectRuntime {
       if(this.active!==active)return;
       frame.contentWindow.postMessage({type:'init',definition:structuredClone(definition),executionId:active.executionId},'*');
     };
-    frame.src='/runtime/frame';this.container.append(frame);watchdog(RUNTIME_LIMITS.startupMs);active.waiting=true;
+    frame.src=this.frameUrl;this.container.append(frame);watchdog(RUNTIME_LIMITS.startupMs);active.waiting=true;
     active.interval=setInterval(()=>{
       if(this.active!==active || active.waiting || (active.paused && active.pendingScale===undefined))return;
       active.waiting=true;watchdog(RUNTIME_LIMITS.frameMs);

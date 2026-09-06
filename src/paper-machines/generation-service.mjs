@@ -194,7 +194,19 @@ export function createGenerationHandler(options = {}) {
     const send = (status, body) => { if (streaming) { event({type:status===200?'result':'error',...body}); response.end(); return; } if (!response.destroyed) { response.writeHead(status, { 'content-type':'application/json', 'cache-control':'no-store' }); response.end(JSON.stringify(body)); } };
     const host = request.headers.host;
     const port = request.socket.localPort;
-    if (![ `localhost:${port}`, `127.0.0.1:${port}` ].includes(host) || request.headers.origin !== `http://${host}` || request.headers['x-paper-machines'] !== '1' || request.headers['content-type'] !== 'application/json') return send(403, { error:'Open Paper Machines on localhost to generate.', code:'forbidden' });
+    const origin=request.headers.origin;
+    const allowed=options.allowedOrigins
+      ? options.allowedOrigins.includes(origin)
+      : [`localhost:${port}`,`127.0.0.1:${port}`].includes(host)&&origin===`http://${host}`;
+    response.setHeader('Vary','Origin');
+    if(!allowed)return send(403,{error:'This site is not allowed to request generation.',code:'forbidden'});
+    response.setHeader('Access-Control-Allow-Origin',origin);
+    if(request.method==='OPTIONS'){
+      const headers=(request.headers['access-control-request-headers']||'').toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+      if(request.headers['access-control-request-method']!=='POST'||headers.some(h=>!['content-type','x-paper-machines','accept'].includes(h)))return send(403,{error:'Request headers or method not allowed.',code:'forbidden'});
+      response.writeHead(204,{'Access-Control-Allow-Methods':'POST','Access-Control-Allow-Headers':'Content-Type, X-Paper-Machines, Accept','Access-Control-Max-Age':'600'});response.end();return;
+    }
+    if(request.method!=='POST'||request.headers['x-paper-machines']!=='1'||request.headers['content-type']!=='application/json')return send(403,{error:'Invalid generation request.',code:'forbidden'});
     if (Date.now()-started >= GENERATION_LIMITS.windowMs) { started = Date.now(); count = 0; }
     if (active >= GENERATION_LIMITS.concurrent || count >= GENERATION_LIMITS.requestsPerWindow) return send(429, { error:'Too many generation requests. Wait a little before trying again.', code:'rate_limit' });
     active++; count++;

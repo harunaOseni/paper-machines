@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build:frontend"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Set PUBLIC_API_ORIGIN in the Netlify build environment to the Railway origin.
+# Generation goes directly to Railway; do not proxy long-running API requests.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/deployment-config.js"
+  [headers.values]
+    Cache-Control = "no-store"

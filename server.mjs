@@ -4,15 +4,17 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createGenerationHandler } from './src/paper-machines/generation-service.mjs';
 import { buildRuntimeAssets } from './src/runtime/assets.mjs';
+import { deploymentConfig, publicConfigSource } from './src/deployment-config.mjs';
 
 const runtimeAssets = await buildRuntimeAssets();
 
 try { process.loadEnvFile(fileURLToPath(new URL('./.env', import.meta.url))); }
 catch (error) { if (error.code !== 'ENOENT') throw new Error('Could not load local environment configuration.'); }
-const generate = createGenerationHandler({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-6-astra' });
+const config=deploymentConfig(process.env);
+const generate = createGenerationHandler({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-6-astra', allowedOrigins:config.allowedOrigins });
 
 const root = fileURLToPath(new URL("./public/", import.meta.url));
-const port = Number.parseInt(process.env.PORT || "4173", 10);
+const port = config.port;
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -57,6 +59,10 @@ async function serveStatic(pathname, response) {
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
+    if(request.method==='GET'&&url.pathname==='/deployment-config.js'){
+      response.writeHead(200,{'content-type':'text/javascript; charset=utf-8','cache-control':'no-store'});
+      response.end(publicConfigSource(config.apiOrigin));return;
+    }
     if (request.method === 'GET' && url.pathname === '/runtime/host.js') {
       response.writeHead(200, { 'content-type':'text/javascript; charset=utf-8', 'cache-control':'no-cache' });
       response.end(runtimeAssets.host);return;
@@ -66,7 +72,7 @@ const server = http.createServer(async (request, response) => {
       response.writeHead(200, { 'content-type':'text/html; charset=utf-8', 'cache-control':'no-store', 'content-security-policy':frame.csp, 'referrer-policy':'no-referrer' });
       response.end(frame.html);return;
     }
-    if (request.method === 'POST' && url.pathname === '/api/generate') {
+    if (['POST','OPTIONS'].includes(request.method) && url.pathname === '/api/generate') {
       await generate(request, response);
       return;
     }
@@ -89,7 +95,7 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(port, "127.0.0.1", () => {
+server.listen(port, config.host, () => {
   console.log(`Paper Machines is running at http://localhost:${server.address().port}`);
 });
 

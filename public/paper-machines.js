@@ -5,6 +5,7 @@ import { SketchSession } from './sketch-session.js';
 import { requestGeneration } from './generation-client.js';
 import { GenerationProgress } from './generation-progress.js';
 import { ObjectRuntime } from '/runtime/host.js';
+import { API_ORIGIN } from './deployment-config.js';
 
 const $ = id => document.getElementById(id);
 const generationProgress = new GenerationProgress($('generation-progress'));
@@ -27,7 +28,7 @@ const runtime = new ObjectRuntime($('runtime-view'), (status, message) => {
   else if(status==='error') generationProgress.fail(message);
   $('notice').textContent = message;
   sync();
-});
+}, {frameUrl:API_ORIGIN+'/runtime/frame'});
 function startRuntime() {
   runtimeReady = false; $('runtime-view').hidden = true;
   if(!generationProgress.stage) generationProgress.start();
