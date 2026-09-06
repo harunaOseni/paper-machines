@@ -1,8 +1,6 @@
 # Paper Machines
 
-Bring your drawings to life. Paper Machines is a web app being built to turn a  
-sketch or uploaded drawing into an animated 3D subject using AI-generated  
-Three.js code. 
+Bring your sketches to life. Turn a little ink and imagination into an animated 3D creation.
 
 ## Run locally
 
