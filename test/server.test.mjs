@@ -15,6 +15,14 @@ test('actual server serves UI, keeps env private, and routes generation', async(
     const origin='http://127.0.0.1:'+port;
     const home=await fetch(origin);assert.equal(home.status,200);assert.match(await home.text(),/id="sketch"/);
     assert.equal((await fetch(origin+'/paper-machines.js')).status,200);
+    assert.equal((await fetch(origin+'/runtime/host.js')).status,200);
+    const runtime=await fetch(origin+'/runtime/frame');
+    assert.equal(runtime.status,200);
+    const policy=runtime.headers.get('content-security-policy');
+    assert.match(policy,/sandbox allow-scripts/);
+    assert.match(policy,/connect-src 'none'/);
+    assert.ok(!policy.includes('allow-same-origin'));
+    assert.equal(runtime.headers.get('cache-control'),'no-store');
     assert.equal((await fetch(origin+'/.env')).status,404);
     assert.equal((await fetch(origin+'/api/generate',{method:'POST',body:'{}'})).status,403);
     assert.equal((await fetch(origin+'/api/generate',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json','X-Paper-Machines':'1'},body:'null'})).status,400);

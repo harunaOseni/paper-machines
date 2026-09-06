@@ -14,6 +14,25 @@ function input(blank=false) {
   return {creationId:'sketch-test',revision:1,requestId:'request-test',source:{imageId:'image-'+sha256.slice(0,58),sha256,widthPx:800,heightPx:800},imageBase64:bytes.toString('base64')};
 }
 const good=input();
+test('HTTP progress arrives before provider completion; checks and result follow real completion',async()=>{
+  let release;
+  const gate=new Promise(r=>release=r);
+  const server=http.createServer(createGenerationHandler({apiKey:'test',fetchImpl:async()=>{await gate;return reply();}}));
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  try {
+    const origin='http://127.0.0.1:'+server.address().port;
+    const response=await fetch(origin,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json','X-Paper-Machines':'1',Accept:'application/x-ndjson'},body:JSON.stringify(good)});
+    assert.match(response.headers.get('content-type'),/ndjson/);
+    const reader=response.body.getReader();let text='';
+    while(!text.includes('generating'))text+=new TextDecoder().decode((await reader.read()).value);
+    assert.ok(text.includes('validating'));assert.ok(!text.includes('checking'));assert.ok(!text.includes('definition'));
+    release();
+    while(true){const {done,value}=await reader.read();if(done)break;text+=new TextDecoder().decode(value);}
+    const events=text.trim().split('\n').map(JSON.parse);
+    assert.deepEqual(events.filter(e=>e.type==='progress').map(e=>e.stage),['validating','generating','checking']);
+    assert.equal(events.at(-1).type,'result');assert.equal(events.at(-1).definition.requestId,good.requestId);
+  } finally {release();server.closeAllConnections();await new Promise(r=>server.close(r));}
+});
 test('provider schema gives every enum/constant an explicit type',()=>{
   const check=s=>{assert.ok(s.type);for(const child of Object.values(s.properties??{}))check(child);if(s.items)check(s.items);};
   check(generationSchema);

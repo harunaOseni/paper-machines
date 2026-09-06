@@ -1,0 +1,851 @@
+{
+  "reviewVersion": "m2-visual-runtime-v1",
+  "limitations": "No new API calls. Original v1 is held-out; v2 reuses tuned examples. Renderer/capture root cause unresolved. No automatic repairs. Conditional visual scores are in VISUAL-REVIEW.md, not represented by pixel thresholds.",
+  "reports": [
+    {
+      "sourceRun": "2026-09-06T06-19-29-939Z",
+      "runtimeWorkerSHA256": "119743e9ceb3ece06205950e197958f5358215f826ea30e55fdc8b30b2926614",
+      "generatedAt": "2026-09-06T09:32:48.470Z",
+      "scope": "Offline sandbox render/motion/restart/dispose; no API calls; no hard memory/GPU accounting",
+      "rows": [
+        {
+          "id": "ambiguous-zigzag",
+          "packageSHA256": "7389fcc96eae3f1be451ee196c2f54c4350f9ab3212f2ae7b264123d097b55bc",
+          "valid": true,
+          "frames": [
+            "ambiguous-zigzag-0.png",
+            "ambiguous-zigzag-7.png",
+            "ambiguous-zigzag-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            5040,
+            9033
+          ],
+          "visiblePixels": 7347,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "ball-basket",
+          "packageSHA256": "6f2cd28fb0f063350bc74de22a4757f4b186e51290e143a18950b62f6503f93c",
+          "valid": true,
+          "frames": [
+            "ball-basket-0.png",
+            "ball-basket-7.png",
+            "ball-basket-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            31189,
+            63789
+          ],
+          "visiblePixels": 66952,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "ball-beach",
+          "packageSHA256": "b1f9d7b75da3805590f4b680c8fab6f5b7f3b79c140dd6b658a843954d72504a",
+          "valid": true,
+          "frames": [
+            "ball-beach-0.png",
+            "ball-beach-7.png",
+            "ball-beach-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            22616,
+            34631
+          ],
+          "visiblePixels": 23032,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 23032,
+          "removed": true,
+          "accepted": false
+        },
+        {
+          "id": "ball-striped",
+          "packageSHA256": "67893d955ad0473b3dda97cbfa578d0d2c59011c752d96e63dccca7f06c63906",
+          "valid": true,
+          "frames": [
+            "ball-striped-0.png",
+            "ball-striped-7.png",
+            "ball-striped-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            17302,
+            27811
+          ],
+          "visiblePixels": 21389,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "creature-cat",
+          "packageSHA256": "7cd167d271858580bd53e6d8ac4511a5cdc6d181528e0497e5559254faed9428",
+          "valid": true,
+          "frames": [
+            "creature-cat-0.png",
+            "creature-cat-7.png",
+            "creature-cat-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            0,
+            0
+          ],
+          "visiblePixels": 0,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 14094,
+          "removed": true,
+          "accepted": false
+        },
+        {
+          "id": "creature-fish",
+          "packageSHA256": "9978bd6737b50ed705d01e7aa07f57dde45ed77e0436513f0c207f060830cb7a",
+          "valid": true,
+          "frames": [
+            "creature-fish-0.png",
+            "creature-fish-7.png",
+            "creature-fish-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            14288,
+            22658
+          ],
+          "visiblePixels": 38074,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "creature-snail",
+          "packageSHA256": "c74f38bb34a343c2d610b2242aada7fbc7ab5b9c9158213e9830319532c372d6",
+          "valid": true,
+          "frames": [
+            "creature-snail-0.png",
+            "creature-snail-7.png",
+            "creature-snail-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            10805,
+            17975
+          ],
+          "visiblePixels": 52745,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 52745,
+          "removed": true,
+          "accepted": false
+        },
+        {
+          "id": "object-lamp",
+          "packageSHA256": "cd817f8b5f093e872eda341c82f0736131947b33bfe94fd25ab03ef236a494f1",
+          "valid": true,
+          "frames": [
+            "object-lamp-0.png",
+            "object-lamp-7.png",
+            "object-lamp-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            3208,
+            5719
+          ],
+          "visiblePixels": 61948,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 61948,
+          "removed": true,
+          "accepted": false
+        },
+        {
+          "id": "object-mug",
+          "packageSHA256": "d8063f45a3e88415b1b9564ecc0c2d355e1254dd07f610cee0ac6db87937a702",
+          "valid": true,
+          "frames": [
+            "object-mug-0.png",
+            "object-mug-7.png",
+            "object-mug-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            1919,
+            4744
+          ],
+          "visiblePixels": 56869,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "object-rocket",
+          "packageSHA256": "66669d5f3acaffa4e403104b43efd0e1745a8884af0cf2c9a49ea05dba4933e5",
+          "valid": true,
+          "frames": [
+            "object-rocket-0.png",
+            "object-rocket-7.png",
+            "object-rocket-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            6535,
+            9953
+          ],
+          "visiblePixels": 43330,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        }
+      ],
+      "evidenceDirectory": "test/eval/results/runtime-review-2026-09-06T06-19-29-939Z-2026-09-06T09-32-07-023Z"
+    },
+    {
+      "sourceRun": "2026-09-06T06-22-54-889Z",
+      "runtimeWorkerSHA256": "119743e9ceb3ece06205950e197958f5358215f826ea30e55fdc8b30b2926614",
+      "generatedAt": "2026-09-06T09:32:06.510Z",
+      "scope": "Offline sandbox render/motion/restart/dispose; no API calls; no hard memory/GPU accounting",
+      "rows": [
+        {
+          "id": "ambiguous-zigzag",
+          "packageSHA256": "471b801eb33eba3caaa8305d8744c988181bb3f52b1b5b431ab2634eba8e4d0c",
+          "valid": true,
+          "frames": [
+            "ambiguous-zigzag-0.png",
+            "ambiguous-zigzag-7.png",
+            "ambiguous-zigzag-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            5582,
+            9832
+          ],
+          "visiblePixels": 8414,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "ball-basket",
+          "packageSHA256": "7fa3493f26cc0d80ca715057ca5d376f98212c63a47bedf6ff73ae5b297a2394",
+          "valid": true,
+          "frames": [
+            "ball-basket-0.png",
+            "ball-basket-7.png",
+            "ball-basket-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            61072,
+            80114
+          ],
+          "visiblePixels": 47085,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "ball-beach",
+          "packageSHA256": "81ea25a61a406088964d76d3323a9c0d54a9bb7268c68a0cbfae84a1c7af769d",
+          "valid": true,
+          "frames": [
+            "ball-beach-0.png",
+            "ball-beach-7.png",
+            "ball-beach-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            41896,
+            103451
+          ],
+          "visiblePixels": 77898,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "ball-striped",
+          "packageSHA256": "0cc91fddba7390919725e97b600224250d7a297262d14ad944c54e44b0fedb9f",
+          "valid": true,
+          "frames": [
+            "ball-striped-0.png",
+            "ball-striped-7.png",
+            "ball-striped-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            56873,
+            100248
+          ],
+          "visiblePixels": 66523,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "creature-cat",
+          "packageSHA256": "0bde594b20b427105b27d7b88068c147a6a7b1bedc54b98b236bc7df9627ed9c",
+          "valid": true,
+          "frames": [
+            "creature-cat-0.png",
+            "creature-cat-7.png",
+            "creature-cat-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            8526,
+            19622
+          ],
+          "visiblePixels": 58562,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 58562,
+          "removed": true,
+          "accepted": false
+        },
+        {
+          "id": "creature-fish",
+          "packageSHA256": "dceedb5d3268d260bb4c5a1cb8aa81a5a48e6debd4fd9f49e646f1a9efdb7280",
+          "valid": true,
+          "frames": [
+            "creature-fish-0.png",
+            "creature-fish-7.png",
+            "creature-fish-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            5540,
+            16081
+          ],
+          "visiblePixels": 51561,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "creature-snail",
+          "packageSHA256": "e5f40bcec26df1fb4d0a00b5b36111916e7749eee59b5ff557b5e2ad8ecb1375",
+          "valid": true,
+          "frames": [
+            "creature-snail-0.png",
+            "creature-snail-7.png",
+            "creature-snail-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            5272,
+            10392
+          ],
+          "visiblePixels": 61341,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "object-lamp",
+          "packageSHA256": "ae70f17190c8afcc20d5bea55879c1193bfde94a7811134ace2fdfcfc39a45a4",
+          "valid": true,
+          "frames": [
+            "object-lamp-0.png",
+            "object-lamp-7.png",
+            "object-lamp-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            1700,
+            2190
+          ],
+          "visiblePixels": 69369,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 69369,
+          "removed": true,
+          "accepted": false
+        },
+        {
+          "id": "object-mug",
+          "packageSHA256": "193eafe19037aee4ee01ae2dc334df29f1105272f2999c35db521473cbeb86c4",
+          "valid": true,
+          "frames": [
+            "object-mug-0.png",
+            "object-mug-7.png",
+            "object-mug-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            3346,
+            6062
+          ],
+          "visiblePixels": 79135,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 0,
+          "removed": true,
+          "accepted": true
+        },
+        {
+          "id": "object-rocket",
+          "packageSHA256": "d0ef048fd8b4cd1859433e572fa2e14ccbe78b56cded78777fc7b490126882d8",
+          "valid": true,
+          "frames": [
+            "object-rocket-0.png",
+            "object-rocket-7.png",
+            "object-rocket-23.png"
+          ],
+          "build": true,
+          "dispose": true,
+          "provenance": true,
+          "sampleTicks": [
+            0,
+            7,
+            23
+          ],
+          "motionPixels": [
+            0,
+            0
+          ],
+          "visiblePixels": 0,
+          "loopChangedPixels": 0,
+          "restartChangedPixels": 38746,
+          "removed": true,
+          "accepted": false
+        }
+      ],
+      "evidenceDirectory": "test/eval/results/runtime-review-2026-09-06T06-22-54-889Z-2026-09-06T09-31-24-816Z"
+    }
+  ],
+  "postFix": {
+    "sourceRun": "2026-09-06T06-22-54-889Z",
+    "runtimeWorkerSHA256": "ad400dafce7c121020c69b1db07048266e2159f81cf91a8fcf649ff1bcffed29",
+    "generatedAt": "2026-09-06T09:41:35.072Z",
+    "scope": "Offline sandbox render/motion/restart/dispose; no API calls; no hard memory/GPU accounting",
+    "rows": [
+      {
+        "id": "ambiguous-zigzag",
+        "packageSHA256": "471b801eb33eba3caaa8305d8744c988181bb3f52b1b5b431ab2634eba8e4d0c",
+        "valid": true,
+        "frames": [
+          "ambiguous-zigzag-0.png",
+          "ambiguous-zigzag-7.png",
+          "ambiguous-zigzag-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          5985,
+          10307
+        ],
+        "visiblePixels": 8001,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "ball-basket",
+        "packageSHA256": "7fa3493f26cc0d80ca715057ca5d376f98212c63a47bedf6ff73ae5b297a2394",
+        "valid": true,
+        "frames": [
+          "ball-basket-0.png",
+          "ball-basket-7.png",
+          "ball-basket-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          54652,
+          75638
+        ],
+        "visiblePixels": 44228,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "ball-beach",
+        "packageSHA256": "81ea25a61a406088964d76d3323a9c0d54a9bb7268c68a0cbfae84a1c7af769d",
+        "valid": true,
+        "frames": [
+          "ball-beach-0.png",
+          "ball-beach-7.png",
+          "ball-beach-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          47883,
+          95567
+        ],
+        "visiblePixels": 73965,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "ball-striped",
+        "packageSHA256": "0cc91fddba7390919725e97b600224250d7a297262d14ad944c54e44b0fedb9f",
+        "valid": true,
+        "frames": [
+          "ball-striped-0.png",
+          "ball-striped-7.png",
+          "ball-striped-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          51403,
+          92478
+        ],
+        "visiblePixels": 62944,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "creature-cat",
+        "packageSHA256": "0bde594b20b427105b27d7b88068c147a6a7b1bedc54b98b236bc7df9627ed9c",
+        "valid": true,
+        "frames": [
+          "creature-cat-0.png",
+          "creature-cat-7.png",
+          "creature-cat-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          8532,
+          19298
+        ],
+        "visiblePixels": 56186,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "creature-fish",
+        "packageSHA256": "dceedb5d3268d260bb4c5a1cb8aa81a5a48e6debd4fd9f49e646f1a9efdb7280",
+        "valid": true,
+        "frames": [
+          "creature-fish-0.png",
+          "creature-fish-7.png",
+          "creature-fish-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          5585,
+          15188
+        ],
+        "visiblePixels": 48645,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "creature-snail",
+        "packageSHA256": "e5f40bcec26df1fb4d0a00b5b36111916e7749eee59b5ff557b5e2ad8ecb1375",
+        "valid": true,
+        "frames": [
+          "creature-snail-0.png",
+          "creature-snail-7.png",
+          "creature-snail-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          5008,
+          9734
+        ],
+        "visiblePixels": 58332,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "object-lamp",
+        "packageSHA256": "ae70f17190c8afcc20d5bea55879c1193bfde94a7811134ace2fdfcfc39a45a4",
+        "valid": true,
+        "frames": [
+          "object-lamp-0.png",
+          "object-lamp-7.png",
+          "object-lamp-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          1468,
+          1842
+        ],
+        "visiblePixels": 75302,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "object-mug",
+        "packageSHA256": "193eafe19037aee4ee01ae2dc334df29f1105272f2999c35db521473cbeb86c4",
+        "valid": true,
+        "frames": [
+          "object-mug-0.png",
+          "object-mug-7.png",
+          "object-mug-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          4211,
+          8087
+        ],
+        "visiblePixels": 76099,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      },
+      {
+        "id": "object-rocket",
+        "packageSHA256": "d0ef048fd8b4cd1859433e572fa2e14ccbe78b56cded78777fc7b490126882d8",
+        "valid": true,
+        "frames": [
+          "object-rocket-0.png",
+          "object-rocket-7.png",
+          "object-rocket-23.png"
+        ],
+        "build": true,
+        "dispose": true,
+        "provenance": true,
+        "sampleTicks": [
+          0,
+          7,
+          23
+        ],
+        "motionPixels": [
+          3448,
+          6581
+        ],
+        "visiblePixels": 36523,
+        "loopChangedPixels": 0,
+        "restartChangedPixels": 0,
+        "removed": true,
+        "accepted": true
+      }
+    ],
+    "evidenceDirectory": "test/eval/results/runtime-review-2026-09-06T06-22-54-889Z-2026-09-06T09-40-48-772Z",
+    "runtimeSourceSHA256": {
+      "worker.js": "ad400dafce7c121020c69b1db07048266e2159f81cf91a8fcf649ff1bcffed29",
+      "assets.mjs": "1cef87eca7fdbeb1db6d18d6fc1ffaf1aed8d5df9868aaa2c888a9327723c05d",
+      "geometry-copy.js": "f91c87a9c7fdd1117eadc0c48392922a1ec1fff22687cbe612546b1556d207ed",
+      "surface-policy.js": "acba0424a0e9aff34d835384a4b209f90f03f41f673c2fc2a234738e5e86b2fa",
+      "host.js": "bb847338e402cf88fe9399cbba34e5b993aa7f2b8213e8d66cd9f9c58afa780b",
+      "protocol.js": "e22294a20a64b4df3a45087945dcad98cf733dec865196207a73bcb83de2653d"
+    }
+  }
+}

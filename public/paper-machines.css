@@ -1,9 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap');
 
 /* Pointer drawing stays visually clean; keyboard focus remains discoverable. */
+#runtime-view { position:absolute; inset:0; z-index:6; }
+#runtime-view iframe { display:block; border:0; width:100%; height:100%; }
+.stage-controls { z-index:8; }
 .snapshot-preview { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 22px; background: #edf0e6; }
 .snapshot-preview img { width: min(100%, 310px); min-height: 0; flex: 0 1 auto; aspect-ratio: 1; object-fit: contain; border-radius: 8px; box-shadow: 0 8px 24px #30382f12; }
 .snapshot-preview .quiet { flex-shrink: 0; text-decoration: underline; text-underline-offset: 4px; }
+.snapshot-preview.is-generating { gap:10px; }
+.snapshot-preview.is-generating img { width:100px; max-height:100px; }
+#generation-progress { width:min(100%,340px); text-align:left; }
+#generation-progress ol { list-style:none; margin:0; padding:0; display:grid; gap:7px; }
+#generation-progress li { font-size:13px; color:#7d8479; display:flex; align-items:center; gap:10px; }
+#generation-progress li::before { content:''; width:14px; height:14px; border:1px solid #b9c1b3; border-radius:50%; flex-shrink:0; }
+#generation-progress li[data-state=done] { color:#48613c; }
+#generation-progress li[data-state=done]::before { content:'✓'; border:0; text-align:center; }
+#generation-progress li[data-state=active] { color:#963f1d; font-weight:600; }
+#generation-progress li[data-state=active]::before { border:2px solid #e0b49b; border-top-color:#a64821; animation:creation-spin 1s linear infinite; }
+#generation-progress[data-failed=true] li[data-state=active]::before { animation:none; content:'!'; border:0; }
+.generation-detail { font-size:12px; line-height:1.5; margin:12px 0 4px; }
+.generation-elapsed { font-size:11px; color:#687260; font-variant-numeric:tabular-nums; }
+@keyframes creation-spin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { #generation-progress li[data-state=active]::before { animation:none; } }
 #sketch:focus { outline: none; }
 #sketch:focus-visible { outline: 2px solid #db7545; outline-offset: -2px; }
 

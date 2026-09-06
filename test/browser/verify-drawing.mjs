@@ -14,7 +14,9 @@ try {
     const input = route.request().postDataJSON();
     const definition = { ...createExampleObject(), creationId: input.creationId, revision: input.revision, requestId: input.requestId, source: input.source };
     if (generationDelay) await new Promise(resolve => setTimeout(resolve, generationDelay));
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ definition }) }).catch(() => {});
+    const events=['validating','generating','checking'].map(stage=>({type:'progress',requestId:input.requestId,stage}));
+    events.push({type:'result',definition});
+    await route.fulfill({ status: 200, contentType: 'application/x-ndjson', body: events.map(e=>JSON.stringify(e)+'\n').join('') }).catch(() => {});
   });
   const open = () => page.goto('http://localhost:4173/');
   const paint = async () => {
@@ -72,16 +74,26 @@ try {
   assert.equal(await page.locator('input[type=file],input[capture]').count(), 0);
   await paint(); await page.mouse.up(); await frame();
   const original = await page.locator('#sketch').evaluate(c => c.toDataURL());
-  await capture(); await page.locator('#bring').click();
+  await capture(); generationDelay=1800; await page.locator('#bring').click();
+  assert.equal(await page.locator('#generation-progress').isVisible(),true);
+  assert.equal(await page.locator('#generation-progress').getAttribute('data-stage'),'sending');
+  await page.waitForTimeout(1050);
+  assert.match(await page.locator('.generation-elapsed').textContent(),/1s elapsed/);
+  assert.equal(await page.locator('#generation-progress').getAttribute('data-stage'),'sending');
+  await page.locator('#stage').screenshot({path:'/tmp/paper-machines-progress.png'});
+  generationDelay=0;
   assert.equal(await page.evaluate(async () => {
     const app = await import('/paper-machines.js');
     const s = app.getPreparedSketch(), r = app.getGenerationRequest();
     const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await r.blob.arrayBuffer())), b => b.toString(16).padStart(2, '0')).join('');
     return s.revision === r.revision && s.creationId === r.creationId && s.source.imageId === r.source.imageId && hash === r.source.sha256;
   }), true);
-  await page.waitForFunction(() => document.querySelector('#notice').textContent.includes('Object and animation generated'));
+  await page.waitForFunction(() => ['ready','error'].includes(document.querySelector('#runtime-view').dataset.state),{},{timeout:15000});
+  assert.equal(await page.locator('#runtime-view').getAttribute('data-state'),'ready',await page.locator('#notice').textContent());
+  assert.equal(await page.locator('#generation-progress').isHidden(),true);
   assert.equal(await page.evaluate(async () => !!(await import('/paper-machines.js')).getGeneratedObject()), true);
-  await page.locator('#edit-sketch').click();
+  await page.locator('#runtime-back').click();
+  assert.equal(await page.locator('#runtime-view iframe').count(), 0);
   assert.equal(await page.locator('#sketch').evaluate(c => c.toDataURL()), original);
   await capture(); generationDelay = 500;
   await page.locator('#bring').click(); await page.locator('#edit-sketch').click();
@@ -109,6 +121,13 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   const preview = await page.locator('#snapshot-preview').boundingBox(), back = await page.locator('#edit-sketch').boundingBox();
   assert.ok(back.y + back.height <= preview.y + preview.height);
+  generationDelay=1800; await page.locator('#bring').click();
+  assert.equal(await page.locator('#generation-progress').isVisible(),true);
+  const mobileProgress=await page.locator('#snapshot-preview').boundingBox(), mobileCancel=await page.locator('#edit-sketch').boundingBox();
+  assert.ok(mobileCancel.y+mobileCancel.height<=mobileProgress.y+mobileProgress.height);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.locator('#edit-sketch').click();
+  assert.equal(await page.locator('#generation-progress').isHidden(),true);
   assert.deepEqual(errors, []);
   console.log('PASS handoff provenance, edit preservation, clear protection, capture failure/cancel/revision races, mobile layout, no page errors.');
 } finally { await browser.close(); }

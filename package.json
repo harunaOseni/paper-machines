@@ -9,6 +9,7 @@
     "start": "node server.mjs",
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/browser/verify-drawing.mjs",
+    "test:runtime": "node test/browser/verify-runtime.mjs",
     "test:eval": "node test/eval/run-generation.mjs"
   },
   "engines": {
@@ -16,6 +17,9 @@
   },
   "dependencies": {
     "acorn": "8.18.0",
-    "pngjs": "7.0.0"
+    "esbuild": "0.28.2",
+    "pngjs": "7.0.0",
+    "ses": "2.3.0",
+    "three": "0.185.1"
   }
 }
