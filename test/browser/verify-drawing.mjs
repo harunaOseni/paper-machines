@@ -93,6 +93,10 @@ try {
   assert.equal(await page.locator('#generation-progress').isHidden(),true);
   assert.equal(await page.evaluate(async () => !!(await import('/paper-machines.js')).getGeneratedObject()), true);
   await page.locator('#runtime-back').click();
+  assert.equal(await page.locator('#runtime-view').isHidden(), true);
+  // Cleanup has a 250 ms grace period; allow browser scheduling overhead while
+  // still requiring the hidden iframe to be removed promptly.
+  await page.waitForFunction(() => document.querySelectorAll('#runtime-view iframe').length === 0, {}, { timeout: 1000 });
   assert.equal(await page.locator('#runtime-view iframe').count(), 0);
   assert.equal(await page.locator('#sketch').evaluate(c => c.toDataURL()), original);
   await capture(); generationDelay = 500;
