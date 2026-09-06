@@ -31,7 +31,7 @@ export class SketchSession {
   }
   accepts(result) {
     const request = this.request?.envelope;
-    return !!request && !this.request.controller.signal.aborted &&
+    return !!request && !!result && !this.request.controller.signal.aborted &&
       result.requestId === request.requestId && result.creationId === request.creationId &&
       result.revision === request.revision && result.source?.imageId === request.source.imageId &&
       result.source?.sha256 === request.source.sha256;

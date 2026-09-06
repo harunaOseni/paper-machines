@@ -2,6 +2,7 @@ import { SketchModel, canvasPoint, SKETCH_SIZE } from './sketch-model.js';
 import { renderSketch } from './sketch-renderer.js';
 import { prepareSketch } from './sketch-snapshot.js';
 import { SketchSession } from './sketch-session.js';
+import { requestGeneration } from './generation-client.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('sketch');
@@ -12,10 +13,13 @@ let ink = '#e56b39', erasing = false, busy = false, timer, ratio = 1;
 let frame = 0;
 const session = new SketchSession();
 let preparing = false, previewUrl = null;
+let generatingId = null, generatedObject = null;
+export function getGeneratedObject() { return generatedObject; }
 export function getPreparedSketch() { return session.snapshot; }
 export function getGenerationRequest() { return session.request?.envelope ?? null; }
 function discardPreview() {
   session.invalidate(); preparing = false;
+  generatingId = generatedObject = null;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   previewUrl = null;
   $('snapshot-image').removeAttribute('src');
@@ -34,22 +38,22 @@ function sync() {
   const preview = !!session.snapshot;
   $('snapshot-preview').hidden = !preview && !preparing;
   $('snapshot-image').hidden = !preview;
-  $('snapshot-title').textContent = preparing ? 'Preparing your sketch…' : 'Your sketch, captured.';
-  $('edit-sketch').textContent = preparing ? 'Cancel preparation' : 'Back to drawing';
+  $('snapshot-title').textContent = preparing ? 'Preparing your sketch…' : generatingId ? 'Finding its next dimension…' : generatedObject ? 'Your object is generated.' : 'Your sketch, captured.';
+  $('edit-sketch').textContent = generatingId ? 'Cancel generation' : preparing ? 'Cancel preparation' : 'Back to drawing';
   $('sketch').setAttribute('aria-busy', String(preparing));
   const sample = model.state.sample && !model.state.strokes.length && !model.active;
   $('undo').disabled = busy || !model.canUndo;
   $('redo').disabled = busy || !model.canRedo;
   $('clear').disabled = busy || !model.hasContent || !!model.active;
   $('sample').disabled = busy || !!model.active;
-  $('bring').disabled = busy || preparing || !!model.active || !model.hasContent;
+  $('bring').disabled = busy || preparing || !!generatingId || !!model.active || !model.hasContent;
   $('input-label').textContent = sample ? 'SAMPLE SKETCH' : 'YOUR SKETCH';
   $('paper-caption').textContent = model.hasContent || model.active ? '' : 'Your first line starts something.';
   $('stage-empty').hidden = sample;
   $('specimen').hidden = !sample;
   document.querySelector('.shadow').hidden = !sample;
   $('stage-caption').hidden = !sample;
-  $('bring').textContent = preparing ? 'Preparing your sketch…' : sample ? 'Replay the transformation ↗' : preview ? 'Bring to life ↗' : 'Preview my sketch ↗';
+  $('bring').textContent = generatingId ? 'Creating your object…' : preparing ? 'Preparing your sketch…' : sample ? 'Replay the transformation ↗' : generatedObject ? 'Try another interpretation ↗' : preview ? 'Bring to life ↗' : 'Preview my sketch ↗';
   $('stage-status').textContent = preview ? 'Your sketch / revision ' + session.snapshot.revision : sample ? 'Little daydream / authored sample' : 'Your sketch / ready when you are';
   for (const id of ['play', 'restart', 'zoom']) $(id).disabled = !sample || busy;
 }
@@ -156,11 +160,23 @@ $('sample').onclick = () => {
   sync(); scheduleRender();
 };
 $('bring').onclick = async () => {
-  if (busy || model.active || !model.hasContent) return;
+  if (busy || preparing || generatingId || model.active || !model.hasContent) return;
   if (!model.state.sample || model.state.strokes.length) {
     if (session.snapshot) {
-      session.startRequest();
-      $('notice').textContent = 'Your sketch is ready. Generation is not connected yet.';
+      const request = session.startRequest();
+      generatingId = request.requestId; generatedObject = null; sync();
+      $('notice').textContent = 'Giving your sketch shape and movement…';
+      try {
+        const result = await requestGeneration(request);
+        if (!session.accepts(result.definition)) return;
+        generatedObject = result.definition;
+        $('notice').textContent = result.definition.subject.summary + ' — Object and animation generated. 3D playback is the next milestone.';
+      } catch (error) {
+        if (!request.signal.aborted && generatingId === request.requestId) $('notice').textContent = error.message || 'Generation failed. Please try again.';
+      } finally {
+        if (generatingId === request.requestId) generatingId = null;
+        sync();
+      }
       return;
     }
     discardPreview();

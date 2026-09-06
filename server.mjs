@@ -2,6 +2,11 @@ import http from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createGenerationHandler } from './src/paper-machines/generation-service.mjs';
+
+try { process.loadEnvFile(fileURLToPath(new URL('./.env', import.meta.url))); }
+catch (error) { if (error.code !== 'ENOENT') throw new Error('Could not load local environment configuration.'); }
+const generate = createGenerationHandler({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-6-astra' });
 
 const root = fileURLToPath(new URL("./public/", import.meta.url));
 const port = Number.parseInt(process.env.PORT || "4173", 10);
@@ -47,9 +52,12 @@ async function serveStatic(pathname, response) {
 }
 
 const server = http.createServer(async (request, response) => {
-  const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
-
   try {
+    const url = new URL(request.url, 'http://localhost');
+    if (request.method === 'POST' && url.pathname === '/api/generate') {
+      await generate(request, response);
+      return;
+    }
     if (request.method === "GET" && url.pathname === "/api/health") {
       json(response, 200, {
         ok: true,
@@ -64,13 +72,13 @@ const server = http.createServer(async (request, response) => {
     }
 
     json(response, 404, { error: "Not found" });
-  } catch (error) {
-    json(response, 500, { error: error instanceof Error ? error.message : "Unexpected server error" });
+  } catch {
+    json(response, 500, { error: "Unexpected server error" });
   }
 });
 
 server.listen(port, "127.0.0.1", () => {
-  console.log(`Paper Machines is running at http://localhost:${port}`);
+  console.log(`Paper Machines is running at http://localhost:${server.address().port}`);
 });
 
 function shutdown() {

@@ -7,9 +7,15 @@
   "scripts": {
     "dev": "node --watch server.mjs",
     "start": "node server.mjs",
-    "test": "node --test"
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "node test/browser/verify-drawing.mjs",
+    "test:eval": "node test/eval/run-generation.mjs"
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "acorn": "8.18.0",
+    "pngjs": "7.0.0"
   }
 }

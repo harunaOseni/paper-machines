@@ -1,5 +1,6 @@
 // Run against npm start. Set PLAYWRIGHT_MODULE to an installed Playwright module if needed.
 import assert from 'node:assert/strict';
+import { createExampleObject } from '../fixtures/example-object.mjs';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const browser = await chromium.launch({ headless: true,
   ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
@@ -7,6 +8,14 @@ try {
   const page = await browser.newPage({ viewport: { width: 1300, height: 1000 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
+  let generationDelay = 0;
+  // Browser integration tests mock the paid provider; live results are recorded by test/eval/.
+  await page.route('**/api/generate', async route => {
+    const input = route.request().postDataJSON();
+    const definition = { ...createExampleObject(), creationId: input.creationId, revision: input.revision, requestId: input.requestId, source: input.source };
+    if (generationDelay) await new Promise(resolve => setTimeout(resolve, generationDelay));
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ definition }) }).catch(() => {});
+  });
   const open = () => page.goto('http://localhost:4173/');
   const paint = async () => {
     await page.locator('#sketch').scrollIntoViewIfNeeded();
@@ -70,11 +79,20 @@ try {
     const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await r.blob.arrayBuffer())), b => b.toString(16).padStart(2, '0')).join('');
     return s.revision === r.revision && s.creationId === r.creationId && s.source.imageId === r.source.imageId && hash === r.source.sha256;
   }), true);
-  assert.match(await page.locator('#notice').textContent(), /not connected/);
+  await page.waitForFunction(() => document.querySelector('#notice').textContent.includes('Object and animation generated'));
+  assert.equal(await page.evaluate(async () => !!(await import('/paper-machines.js')).getGeneratedObject()), true);
   await page.locator('#edit-sketch').click();
   assert.equal(await page.locator('#sketch').evaluate(c => c.toDataURL()), original);
+  await capture(); generationDelay = 500;
+  await page.locator('#bring').click(); await page.locator('#edit-sketch').click();
+  await page.waitForTimeout(700);
+  assert.equal(await page.evaluate(async () => (await import('/paper-machines.js')).getGeneratedObject()), null);
+  await capture(); await page.locator('#bring').click(); await paint(); await page.mouse.up();
+  await page.waitForTimeout(700);
+  assert.equal(await page.evaluate(async () => (await import('/paper-machines.js')).getGeneratedObject()), null);
+  generationDelay = 0;
   page.once('dialog', d => d.dismiss()); await page.locator('#clear').click();
-  assert.equal(await page.locator('#sketch').evaluate(c => c.toDataURL()), original);
+  assert.ok(await pixels() > 0);
   await page.evaluate(() => {
     const encode = HTMLCanvasElement.prototype.toBlob;
     HTMLCanvasElement.prototype.toBlob = function (cb, ...args) { encode.call(this, b => setTimeout(() => cb(b), 400), ...args); };
