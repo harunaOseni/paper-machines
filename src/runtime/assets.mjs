@@ -38,7 +38,9 @@ export async function buildRuntimeAssets() {
           worker.postMessage(m);return;
         }
         if(event.origin!==parentOrigin||m?.requestId!==ids.requestId||m.executionId!==ids.executionId||!Number.isSafeInteger(m.sequence)||m.sequence<=last)return;
-        if(!['tick','dispose'].includes(m.type)||Object.keys(m).length!==4)return;
+        if(m.type==='view'){
+          if(Object.keys(m).length!==5||typeof m.scale!=='number'||!Number.isFinite(m.scale)||m.scale<0.7||m.scale>1.25)return;
+        }else if(!['tick','dispose'].includes(m.type)||Object.keys(m).length!==4)return;
         last=m.sequence;worker.postMessage(m);
       });
       addEventListener('pagehide',()=>worker?.terminate());

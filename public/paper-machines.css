@@ -3,6 +3,9 @@
 /* Pointer drawing stays visually clean; keyboard focus remains discoverable. */
 #runtime-view { position:absolute; inset:0; z-index:6; }
 #runtime-view iframe { display:block; border:0; width:100%; height:100%; }
+#runtime-view[data-state="ready"] { animation: creation-reveal 220ms ease-out; }
+@keyframes creation-reveal { from { opacity:0; } to { opacity:1; } }
+@media (prefers-reduced-motion: reduce) { #runtime-view[data-state="ready"] { animation:none; } }
 .stage-controls { z-index:8; }
 .snapshot-preview { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 22px; background: #edf0e6; }
 .snapshot-preview img { width: min(100%, 310px); min-height: 0; flex: 0 1 auto; aspect-ratio: 1; object-fit: contain; border-radius: 8px; box-shadow: 0 8px 24px #30382f12; }

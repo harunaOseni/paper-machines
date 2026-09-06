@@ -22,7 +22,7 @@ const runtime = new ObjectRuntime($('runtime-view'), (status, message) => {
   runtimeReady = status === 'ready';
   $('runtime-view').hidden = !runtimeReady;
   $('runtime-view').dataset.state = status;
-  if (runtimeReady) runtime.pause(runtimePaused);
+  if (runtimeReady) { runtime.pause(runtimePaused); runtime.setScale(Number($('zoom').value)/100); }
   if (runtimeReady) generationProgress.complete();
   else if(status==='error') generationProgress.fail(message);
   $('notice').textContent = message;
@@ -87,7 +87,7 @@ function sync() {
   $('bring').textContent = generatingId ? 'Creating your object…' : preparing ? 'Preparing your sketch…' : sample ? 'Replay the transformation ↗' : generatedObject ? 'Try another interpretation ↗' : preview ? 'Bring to life ↗' : 'Preview my sketch ↗';
   $('stage-status').textContent = preview ? 'Your sketch' : sample ? 'Little daydream / authored sample' : 'Your sketch / ready when you are';
   for (const id of ['play', 'restart']) $(id).disabled = (!sample && !runtimeReady) || busy;
-  $('zoom').disabled = !sample || busy;
+  $('zoom').disabled = (!sample && !runtimeReady) || busy;
   if (runtimeReady) {
     $('play').textContent = runtimePaused ? '▶' : 'Ⅱ';
     $('play').setAttribute('aria-label', runtimePaused ? 'Play animation' : 'Pause animation');
@@ -274,7 +274,11 @@ $('restart').onclick = () => {
   $('stage').classList.remove('paused'); $('play').textContent = 'Ⅱ';
   $('play').setAttribute('aria-label', 'Pause demo animation');
 };
-$('zoom').oninput = event => $('specimen').style.setProperty('--scale', event.target.value / 100);
+$('zoom').oninput = event => {
+  const scale=Number(event.target.value)/100;
+  if(runtimeReady)runtime.setScale(scale);
+  else $('specimen').style.setProperty('--scale',scale);
+};
 $('about').onclick = () => $('about-dialog').showModal();
 for (const id of ['close-about', 'back']) $(id).onclick = () => $('about-dialog').close();
 if (reducedMotion) {

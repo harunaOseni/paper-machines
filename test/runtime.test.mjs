@@ -6,6 +6,16 @@ import { copyRenderable } from '../src/runtime/geometry-copy.js';
 import {hasOpenBoundary} from '../src/runtime/surface-policy.js';
 import {RUNTIME_LIMITS} from '../src/runtime/limits.js';
 
+test('view commands allow only bounded camera scale and reject stale or extra fields',()=>{
+  const expected={requestId:'request-test',executionId:'execution-test'};
+  const command={type:'view',...expected,sequence:1,scale:1};
+  for(const scale of [0.7,1,1.25])assert.equal(acceptsCommand({...command,scale},expected,0),true);
+  for(const scale of [0,1.26,NaN,Infinity,'1',null])assert.equal(acceptsCommand({...command,scale},expected,0),false);
+  assert.equal(acceptsCommand({...command,extra:true},expected,0),false);
+  assert.equal(acceptsCommand(command,expected,1),false);
+  assert.equal(acceptsCommand({...command,executionId:'old'},expected,0),false);
+});
+
 test('copy disposal releases each trusted resource exactly once',()=>{
   const original=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());
   const result=copyRenderable(original);let released=0;

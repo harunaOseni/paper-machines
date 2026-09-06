@@ -8,5 +8,6 @@ export function acceptsRuntimeEvent(event, frameWindow, expected) {
 export function acceptsCommand(message, expected, lastSequence) {
   if (!message || message.executionId !== expected.executionId || message.requestId !== expected.requestId ||
     !Number.isSafeInteger(message.sequence) || message.sequence <= lastSequence || message.sequence > 1000000000) return false;
+  if(message.type==='view')return Object.keys(message).length===5 && typeof message.scale==='number' && Number.isFinite(message.scale) && message.scale>=0.7 && message.scale<=1.25;
   return ['tick','dispose'].includes(message.type) && Object.keys(message).length === 4;
 }

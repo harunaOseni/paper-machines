@@ -77,6 +77,10 @@ self.onmessage=event=>{
       try {sync(instance.dispose());}finally{release();}
       emit('disposed','Object disposed');self.close();return;
     }
+    if(message.type==='view'){
+      camera.zoom=message.scale;camera.updateProjectionMatrix();
+      renderer.render(scene,camera);emit('frame','View updated');return;
+    }
     tick++;
     const duration=Math.max(1,Math.round(config.animation.durationSeconds*30));
     const sample=config.animation.loop?tick%duration:Math.min(tick,duration);

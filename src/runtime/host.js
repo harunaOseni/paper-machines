@@ -33,12 +33,18 @@ export class ObjectRuntime {
     };
     frame.src='/runtime/frame';this.container.append(frame);watchdog(RUNTIME_LIMITS.startupMs);active.waiting=true;
     active.interval=setInterval(()=>{
-      if(this.active!==active || active.waiting || active.paused)return;
+      if(this.active!==active || active.waiting || (active.paused && active.pendingScale===undefined))return;
       active.waiting=true;watchdog(RUNTIME_LIMITS.frameMs);
-      frame.contentWindow.postMessage({type:'tick',requestId:active.requestId,executionId:active.executionId,sequence:active.command++},'*');
+      const command={type:'tick',requestId:active.requestId,executionId:active.executionId,sequence:active.command++};
+      if(active.pendingScale!==undefined){command.type='view';command.scale=active.pendingScale;active.pendingScale=undefined;}
+      frame.contentWindow.postMessage(command,'*');
     },1000/RUNTIME_LIMITS.framesPerSecond);
   }
   pause(value) {if(this.active)this.active.paused=value;}
+  setScale(value) {
+    if(typeof value!=='number'||!Number.isFinite(value)||value<0.7||value>1.25)throw new Error('Invalid view scale');
+    if(this.active)this.active.pendingScale=value;
+  }
   dispose(force=false) {
     const a=this.active;
     if(!a){if(force)this.retiring?.finish('terminated');return this.retiring?.promise??Promise.resolve('idle');}
