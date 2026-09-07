@@ -54,6 +54,7 @@ test('generation sends exact image, no persistence, and returns server-owned pro
   const result=await generateObject(good,{apiKey:'test-only',fetchImpl:async(url,options)=>{
     assert.equal(url,'https://api.openai.com/v1/responses');
     const body=JSON.parse(options.body);assert.equal(body.store,false);assert.equal(body.text.format.strict,true);
+    assert.equal(body.reasoning.effort,'low');
     assert.equal(body.input[0].content[1].image_url,'data:image/png;base64,'+good.imageBase64);
     return reply();
   }});
